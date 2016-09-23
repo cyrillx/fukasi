@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+
 /* Статистика вхождений слов в тексте (книге)
 * wordStat конкретный набор букв
 * bookStat список слов wordStat
@@ -23,6 +24,12 @@ namespace bookStatist {
 
             if (args.Length < 2) return;
             dst = args[1];
+
+            if (args.Length == 3) {
+                bookStat extender = new bookStat();
+                extender.load(args[2]);
+                bs = bs + extender;
+            }
             bs.save(dst);
         }
 
@@ -34,11 +41,11 @@ namespace bookStatist {
             words = new List<wordStat>();
         }
 
-        public void count(String s) {
+        public void count(String s, uint a = 1) {
             s = s.ToLower();
             foreach (wordStat ws in words) {
                 if (ws.isIn(s)) {
-                    ws.count();
+                    ws.count(a);
                     return;
                 }
             }
@@ -101,6 +108,29 @@ namespace bookStatist {
 
             return true;
         }
+
+        public wordStat getWSByWord(string s) {
+            foreach (wordStat ws in words) {
+                if (ws.word.Equals(s)) {
+                    // слово найдено списке, возвращаем
+                    return ws;
+                }
+            }
+            wordStat WS = new wordStat(s);
+            words.Add(WS);
+            return WS;
+        }
+
+        public static bookStat operator +(bookStat BS0, bookStat BS1) {
+            foreach(wordStat WS in BS1.words) {
+                string S = WS.word;
+                uint en = WS.entries;
+                BS0.getWSByWord(S).count(en);
+            }
+
+
+            return BS0;
+        }
     }
 
     public class wordStat {
@@ -115,8 +145,9 @@ namespace bookStatist {
             return s == word;
         }
 
-        public void count() {
-            entries++;
+        public void count(uint a = 1) {
+            entries += a;
         }
+
     }
 }
